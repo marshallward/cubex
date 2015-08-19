@@ -1,0 +1,6 @@
+include AUTHORS
+include CHANGELOG
+include LICENSE
+include MANIFEST.in
+include NOTICE
+include README.rst
