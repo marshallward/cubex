@@ -2,7 +2,7 @@ import tarfile
 import xml.etree.ElementTree as ElementTree
 
 from cubex.metric import Metric
-
+from cubex.region import Region
 
 class Cube(object):
 
@@ -14,7 +14,6 @@ class Cube(object):
         self.metrics = []
         self.regions = []
         self.system = None
-
 
     def parse(self, cubex_path):
 
@@ -40,11 +39,13 @@ class Cube(object):
         for n in root.iter('attr'):
             self.attrs[n.attrib['key']] = n.attrib['value']
 
-        # Documentation
+        # Docs
         # TODO
-
-        print(root.find('metrics'))
 
         # Metrics
         for m in root.find('metrics').iter('metric'):
             self.metrics.append(Metric(m))
+
+        # Regions
+        for r in root.find('program').iter('region'):
+            self.regions.append(Region(r))
