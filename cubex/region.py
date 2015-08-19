@@ -1,7 +1,7 @@
 class Region(object):
 
     def __init__(self, node):
-        
+
         self.name = node.find('name').text
         self.mangled_name = node.find('mangled_name').text
         self.description = node.find('descr').text

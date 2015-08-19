@@ -4,6 +4,7 @@ import xml.etree.ElementTree as ElementTree
 from cubex.metric import Metric
 from cubex.region import Region
 
+
 class Cube(object):
 
     def __init__(self):
