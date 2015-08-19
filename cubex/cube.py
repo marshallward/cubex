@@ -1,6 +1,9 @@
 import tarfile
 import xml.etree.ElementTree as ElementTree
 
+from cubex.metric import Metric
+
+
 class Cube(object):
 
     def __init__(self):
@@ -33,8 +36,6 @@ class Cube(object):
         self.version = root.attrib['version']
 
         # Attributes
-        attr_nodes = (n for n in root if n.tag == 'attr')
-
         self.attrs = {}
         for n in root.iter('attr'):
             self.attrs[n.attrib['key']] = n.attrib['value']
@@ -42,4 +43,8 @@ class Cube(object):
         # Documentation
         # TODO
 
+        print(root.find('metrics'))
+
         # Metrics
+        for m in root.find('metrics').iter('metric'):
+            self.metrics.append(Metric(m))
