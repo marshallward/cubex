@@ -4,6 +4,7 @@ class CallTree(object):
 
         self.region_id = node.get('calleeId')
         self.children = []
+        self.metrics = {}
 
         cube.cindex[int(node.get('id'))] = self
 

@@ -1,10 +1,11 @@
+import struct
 import tarfile
 import xml.etree.ElementTree as ElementTree
 
 from cubex.metric import Metric
 from cubex.region import Region
 from cubex.calltree import CallTree
-
+from cubex.system import SystemNode, Location, LocationGroup
 
 class Cube(object):
 
@@ -17,6 +18,9 @@ class Cube(object):
         self.regions = []
         self.calltrees = []
         self.cindex = []
+
+        self.systems = []
+        self.locations = []
 
     def parse(self, cubex_path):
 
@@ -61,5 +65,44 @@ class Cube(object):
         for cnode in root.find('program').findall('cnode'):
             self.calltrees.append(CallTree(cnode, self))
 
+        # Location groups
+        # TODO: Connect nodes to processes
+        #       This is just a dump of the info
+        for snode in root.find('system').findall('systemtreenode'):
+            self.systems.append(SystemNode(snode))
+
+            for nnode in snode.findall('systemtreenode'):
+                for lnode in nnode.findall('locationgroup'):
+                    self.locations.append(LocationGroup(lnode))
+
+        # TODO: Topologies
+
         # Populate data
-        # TODO
+        # TODO: Get data size (bytes send/recv seems different)
+        for m_id, metric in enumerate(self.metrics[:4]):
+
+            try:
+                m_data = cubex.extractfile('{}.data'.format(m_id))
+            except:
+                # TODO: Fill missing entries with zeros
+                continue
+
+            # Skip header
+            header = m_data.read(10)
+            assert header == 'CUBEX.DATA'
+
+            m_fmt = metric_fmt[metric.dtype]
+
+            for cnode in self.cindex:
+                n_bytes = len(self.locations) * 8
+                raw = m_data.read(n_bytes)
+
+                fmt = '<' + m_fmt * len(self.locations)
+                cnode.metrics[metric.name] = struct.unpack(fmt, raw)
+
+
+metric_fmt = {'UINT64': 'Q',
+              'DOUBLE': 'd',
+              'MAXDOUBLE': 'd',
+              'MINDOUBLE': 'd',
+             }
