@@ -3,6 +3,7 @@ import xml.etree.ElementTree as ElementTree
 
 from cubex.metric import Metric
 from cubex.region import Region
+from cubex.calltree import CallTree
 
 class Cube(object):
 
@@ -13,7 +14,8 @@ class Cube(object):
 
         self.metrics = []
         self.regions = []
-        self.system = None
+        self.calltrees = []
+        self.cindex = []
 
     def parse(self, cubex_path):
 
@@ -23,9 +25,7 @@ class Cube(object):
         try:
             anchor_file = cubex.extractfile('anchor.xml')
         except KeyError:
-            # TODO: exit gracefully
-            print('cubex: error: anchor.xml file not in {0}.'
-                  ''.format(cubex_path))
+            # TODO: Exit gracefully
             raise
 
         anchor = ElementTree.parse(anchor_file)
@@ -36,16 +36,29 @@ class Cube(object):
 
         # Attributes
         self.attrs = {}
-        for n in root.iter('attr'):
-            self.attrs[n.attrib['key']] = n.attrib['value']
+        for anode in root.findall('attr'):
+            self.attrs[anode.attrib['key']] = anode.attrib['value']
 
         # Docs
         # TODO
 
         # Metrics
-        for m in root.find('metrics').iter('metric'):
-            self.metrics.append(Metric(m))
+        for mnode in root.find('metrics').findall('metric'):
+            self.metrics.append(Metric(mnode))
 
         # Regions
-        for r in root.find('program').iter('region'):
-            self.regions.append(Region(r))
+        for rnode in root.find('program').findall('region'):
+            self.regions.append(Region(rnode))
+
+        # Call tree counter
+        # TODO: Derive this number from file size?
+        n_nodes = 0
+        for cnode in root.find('program').iter('cnode'):
+            n_nodes += 1
+        self.cindex = [None] * n_nodes
+
+        for cnode in root.find('program').findall('cnode'):
+            self.calltrees.append(CallTree(cnode, self))
+
+        # Populate data
+        # TODO
