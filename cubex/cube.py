@@ -5,6 +5,7 @@ from cubex.metric import Metric
 from cubex.region import Region
 from cubex.calltree import CallTree
 
+
 class Cube(object):
 
     def __init__(self):
