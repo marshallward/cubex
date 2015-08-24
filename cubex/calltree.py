@@ -2,8 +2,8 @@ class CallTree(object):
 
     def __init__(self, node):
 
-        self.call_id = node.get('id')
-        self.region_id = node.get('calleeId')
+        self.call_id = int(node.get('id'))
+        self.region_id = int(node.get('calleeId'))
         self.children = []
         self.metrics = {}
 
