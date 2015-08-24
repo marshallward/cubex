@@ -1,4 +1,4 @@
-from collections import deque
+import collections
 import struct
 import tarfile
 import xml.etree.ElementTree as ElementTree
@@ -56,28 +56,13 @@ class Cube(object):
         for rnode in root.find('program').findall('region'):
             self.regions.append(Region(rnode))
 
-        # Call tree counter
-        # TODO: Derive this number from file size?
-        #n_nodes = 0
-        #for cnode in root.find('program').iter('cnode'):
-        #    n_nodes += 1
-        #self.cindex = [None] * n_nodes
-
-        # Need a BFS iteration here..
-        #for cnode in root.find('program').findall('cnode'):
-        #    self.calltrees.append(CallTree(cnode, self))
-
-        # BFS implementation
+        # Call tree index (BFS implementation)
         for ctree in root.find('program').findall('cnode'):
-            bfs_tree = deque([ctree])
+            bfs_tree = collections.deque([ctree])
             while bfs_tree:
                 ctree_xnode = bfs_tree.popleft()
                 bfs_tree.extend(ctree_xnode)
                 self.cindex.append(CallTree(ctree_xnode))
-
-                # Silly diagnostic
-                #idx = int(ctree_xnode.attrib['calleeId'])
-                #print(self.regions[idx].name)
 
         # Location groups
         # TODO: Connect nodes to processes
