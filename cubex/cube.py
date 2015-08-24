@@ -1,3 +1,4 @@
+from collections import deque
 import struct
 import tarfile
 import xml.etree.ElementTree as ElementTree
@@ -57,13 +58,26 @@ class Cube(object):
 
         # Call tree counter
         # TODO: Derive this number from file size?
-        n_nodes = 0
-        for cnode in root.find('program').iter('cnode'):
-            n_nodes += 1
-        self.cindex = [None] * n_nodes
+        #n_nodes = 0
+        #for cnode in root.find('program').iter('cnode'):
+        #    n_nodes += 1
+        #self.cindex = [None] * n_nodes
 
-        for cnode in root.find('program').findall('cnode'):
-            self.calltrees.append(CallTree(cnode, self))
+        # Need a BFS iteration here..
+        #for cnode in root.find('program').findall('cnode'):
+        #    self.calltrees.append(CallTree(cnode, self))
+
+        # BFS implementation
+        for ctree in root.find('program').findall('cnode'):
+            bfs_tree = deque([ctree])
+            while bfs_tree:
+                ctree_xnode = bfs_tree.popleft()
+                bfs_tree.extend(ctree_xnode)
+                self.cindex.append(CallTree(ctree_xnode))
+
+                # Silly diagnostic
+                #idx = int(ctree_xnode.attrib['calleeId'])
+                #print(self.regions[idx].name)
 
         # Location groups
         # TODO: Connect nodes to processes
