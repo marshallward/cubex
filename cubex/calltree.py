@@ -6,14 +6,14 @@ class CallTree(object):
         self.region_id = int(node.get('calleeId'))
         self.metrics = {}
 
-        self.children = []
         self.parent = parent
+        self.children = []
 
-        self.state = None
-        self.cidx = None
+        for child_node in node.findall('cnode'):
+            child_tree = CallTree(child_node, self)
+            self.children.append(child_tree)
 
-        #cube.cindex[int(node.get('id'))] = self
-
-        #for child_node in node.findall('cnode'):
-        #    child_tree = CallTree(child_node, cube)
-        #    self.children.append(child_tree)
+    def update_index(self, index):
+        index.extend(self.children)
+        for child in self.children:
+            child.update_index(index)

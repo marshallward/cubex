@@ -8,6 +8,7 @@ from cubex.region import Region
 from cubex.calltree import CallTree
 from cubex.system import SystemNode, Location, LocationGroup
 
+
 class Cube(object):
 
     def __init__(self):
@@ -57,15 +58,14 @@ class Cube(object):
         for rnode in root.find('program').findall('region'):
             self.regions.append(Region(rnode))
 
-        # Call tree index
-        # XXX: Broken! Iterates over first child of all nodes, not all children
-        #      of first node
-        for ctree in root.find('program').findall('cnode'):
-            bfs_tree = collections.deque([ctree])
-            while bfs_tree:
-                ctree_xnode = bfs_tree.popleft()
-                bfs_tree.extend(ctree_xnode)
-                self.cindex.append(CallTree(ctree_xnode))
+        # Call tree
+        for ct_xnode in root.find('program').findall('cnode'):
+            self.calltrees.append(CallTree(ct_xnode, self))
+
+        # Construct the call tree index
+        for ctree in self.calltrees:
+            self.cindex.append(ctree)
+            ctree.update_index(self.cindex)
 
         # Location groups
         # TODO: Connect nodes to processes
