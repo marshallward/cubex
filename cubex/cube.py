@@ -12,6 +12,8 @@ from cubex.system import SystemNode, Location, LocationGroup
 class Cube(object):
 
     def __init__(self):
+        self.cubex_file = None
+
         self.version = None
         self.attrs = {}
         self.docs = None
@@ -27,10 +29,10 @@ class Cube(object):
     def parse(self, cubex_path):
 
         # Open the .cubex tar file and preserve the reference
-        cubex = tarfile.open(cubex_path, 'r')
+        self.cubex_file = tarfile.open(cubex_path, 'r')
 
         try:
-            anchor_file = cubex.extractfile('anchor.xml')
+            anchor_file = self.cubex_file.extractfile('anchor.xml')
         except KeyError:
             # TODO: Exit gracefully
             raise
@@ -54,13 +56,24 @@ class Cube(object):
         for mnode in root.find('metrics').findall('metric'):
             self.metrics.append(Metric(mnode))
 
+        # Read the metric index
+        for metric in self.metrics:
+            index_fname = '{}.index'.format(metric.mid)
+            try:
+                m_index = self.cubex_file.extractfile(index_fname)
+            except KeyError:
+                print('{} not found; skipping.'.format(index_fname))
+                continue
+
+            metric.read_index(m_index)
+
         # Regions
         for rnode in root.find('program').findall('region'):
             self.regions.append(Region(rnode))
 
         # Call tree
-        for ct_xnode in root.find('program').findall('cnode'):
-            self.calltrees.append(CallTree(ct_xnode, self))
+        for cnode in root.find('program').findall('cnode'):
+            self.calltrees.append(CallTree(cnode, self))
 
         # Construct the call tree index
         for ctree in self.calltrees:
@@ -79,32 +92,60 @@ class Cube(object):
 
         # TODO: Topologies
 
+    def read_data(self, metric):
+
         # Populate data
         # TODO: Get data size (bytes send/recv seems different)
-        for m_id, metric in enumerate(self.metrics[:4]):
+        try:
+            m_data_fname = '{}.data'.format(metric.mid)
+            print(m_data_fname)
+            m_data = self.cubex_file.extractfile(m_data_fname)
+        except KeyError:
+            # TODO: Fill missing entries with zeros
+            pass
 
-            try:
-                m_data = cubex.extractfile('{}.data'.format(m_id))
-            except:
-                # TODO: Fill missing entries with zeros
-                continue
+        # Skip header
+        header = m_data.read(10)
+        assert header == 'CUBEX.DATA'
 
-            # Skip header
-            header = m_data.read(10)
-            assert header == 'CUBEX.DATA'
+        m_fmt = metric_fmt[metric.dtype]
 
-            m_fmt = metric_fmt[metric.dtype]
+        for cnode in self.cindex:
+            n_bytes = len(self.locations) * 8
+            raw = m_data.read(n_bytes)
 
-            for cnode in self.cindex:
-                n_bytes = len(self.locations) * 8
-                raw = m_data.read(n_bytes)
-
-                fmt = '<' + m_fmt * len(self.locations)
-                cnode.metrics[metric.name] = struct.unpack(fmt, raw)
+            fmt = '<' + m_fmt * len(self.locations)
+            cnode.metrics[metric.name] = struct.unpack(fmt, raw)
 
 
-metric_fmt = {'UINT64': 'Q',
-              'DOUBLE': 'd',
-              'MAXDOUBLE': 'd',
-              'MINDOUBLE': 'd',
-             }
+# Taken from CubeMetric.cpp
+metric_fmt = {
+    'INT8':                 'b',
+    'UINT8':                'c',
+    'CHAR':                 'c',
+    'INT16':                'h',
+    'SIGNED SHORT INT':     'h',
+    'SHORT INT':            'h',
+    'UINT16':               'H',
+    'UNSIGNED SHORT INT':   'H',
+    'INT32':                'i',
+    'SIGNED INT':           'i',
+    'INT':                  'i',
+    'UINT32':               'I',
+    'UNSIGNED INT':         'I',
+    'INT64':                'q',
+    'SIGNED INTEGER':       'q',
+    'INTEGER':              'q',
+    'UINT64':               'Q',
+    'UNSIGNED INTEGER':     'Q',
+    'DOUBLE':               'd',
+    'FLOAT':                'd',
+    'COMPLEX':              'dd',
+    'TAU_ATOMIC':           'P',
+    'MINDOUBLE':            'd',
+    'MAXDOUBLE':            'd',
+    'RATE':                 'P',
+    'SCALE_FUNC':           'P',
+    'HISTOGRAM':            'P',
+    'NDOUBLES':             'P'
+}
