@@ -49,6 +49,7 @@ class Cube(object):
         # TODO
 
         # Metrics
+        # TODO: Other profilers (e.g. scalasca) store metrics as trees
         for mnode in root.find('metrics').findall('metric'):
             self.metrics.append(Metric(mnode))
 
@@ -56,7 +57,9 @@ class Cube(object):
         for rnode in root.find('program').findall('region'):
             self.regions.append(Region(rnode))
 
-        # Call tree index (BFS implementation)
+        # Call tree index
+        # XXX: Broken! Iterates over first child of all nodes, not all children
+        #      of first node
         for ctree in root.find('program').findall('cnode'):
             bfs_tree = collections.deque([ctree])
             while bfs_tree:
