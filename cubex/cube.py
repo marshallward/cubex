@@ -18,8 +18,9 @@ class Cube(object):
         self.attrs = {}
         self.docs = None
 
-        self.metrics = []
-        self.regions = []
+        self.metrics = {}
+        self.regions = {}
+
         self.calltrees = []
         self.cindex = []
 
@@ -53,12 +54,22 @@ class Cube(object):
 
         # Metrics
         # TODO: Other profilers (e.g. scalasca) store metrics as trees
+        # TODO: This needs to be a function shared by other elements
         for mnode in root.find('metrics').findall('metric'):
-            self.metrics.append(Metric(mnode))
+            # Old implementation
+            #self.metrics.append(Metric(mnode))
+
+            metric = Metric(mnode)
+            assert metric.name != metric.idx
+            assert metric.name not in self.metrics
+            assert metric.idx not in self.metrics
+
+            self.metrics[metric.name] = metric
+            self.metrics[metric.idx] = metric
 
         # Read the metric index
-        for metric in self.metrics:
-            index_fname = '{}.index'.format(metric.mid)
+        for name, metric in self.metrics.items():
+            index_fname = '{}.index'.format(metric.idx)
             try:
                 m_index = self.cubex_file.extractfile(index_fname)
             except KeyError:
@@ -69,7 +80,26 @@ class Cube(object):
 
         # Regions
         for rnode in root.find('program').findall('region'):
-            self.regions.append(Region(rnode))
+            # Old implementation
+            #self.regions.append(Region(rnode))
+
+            region = Region(rnode)
+            assert region.name != region.idx
+            assert region.idx not in self.regions
+
+            if region.name in self.regions:
+                print(region.name, region.idx, self.regions[region.name])
+
+            if region.name in self.regions:
+                rlist = self.regions[region.name]
+                if not isinstance(rlist, list):
+                    rlist = [rlist]
+                rlist.append(region)
+                self.regions[region.name] = rlist
+            else:
+                self.regions[region.name] = region
+
+            self.regions[region.idx] = region
 
         # Call tree
         for cnode in root.find('program').findall('cnode'):
@@ -97,7 +127,7 @@ class Cube(object):
         # Populate data
         # TODO: Get data size (bytes send/recv seems different)
         try:
-            m_data_fname = '{}.data'.format(metric.mid)
+            m_data_fname = '{}.data'.format(metric.idx)
             print(m_data_fname)
             m_data = self.cubex_file.extractfile(m_data_fname)
         except KeyError:

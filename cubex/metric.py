@@ -4,7 +4,7 @@ class Metric(object):
 
     def __init__(self, node):
         self.name = node.find('uniq_name').text
-        self.mid = int(node.get('id'))
+        self.idx = int(node.get('id'))
         self.display_name = node.find('disp_name').text
         self.description = node.find('descr').text
 

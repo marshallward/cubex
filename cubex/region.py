@@ -3,6 +3,7 @@ class Region(object):
     def __init__(self, node):
 
         self.name = node.find('name').text
+        self.idx = int(node.get('id'))
         self.mangled_name = node.find('mangled_name').text
         self.description = node.find('descr').text
         self.url = node.find('url').text
