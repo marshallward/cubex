@@ -89,7 +89,6 @@ class Cube(object):
 
             if region.name in self.regions:
                 print(region.name, region.idx, self.regions[region.name])
-
             if region.name in self.regions:
                 rlist = self.regions[region.name]
                 if not isinstance(rlist, list):
@@ -136,7 +135,7 @@ class Cube(object):
 
         # Skip header
         header = m_data.read(10)
-        assert header == 'CUBEX.DATA'
+        assert header == b'CUBEX.DATA'
 
         m_fmt = metric_fmt[metric.dtype]
 

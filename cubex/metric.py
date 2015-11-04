@@ -17,7 +17,7 @@ class Metric(object):
 
     def read_index(self, m_index):
         header = m_index.read(11)
-        assert header == 'CUBEX.INDEX'
+        assert header == b'CUBEX.INDEX'
 
         scratch = m_index.read(7)
         raw_size = m_index.read(4)
