@@ -2,12 +2,14 @@ class CallTree(object):
 
     def __init__(self, node, cube, parent=None):
 
-        self.call_id = int(node.get('id'))
-        #self.region_id = int(node.get('calleeId'))
+        self.idx = int(node.get('id'))
         self.metrics = {}
 
         region_id = int(node.get('calleeId'))
         self.region = cube.regions[region_id]
+
+        # Append the cnode to the corresponding region
+        cube.regions[region_id].cnodes.append(self)
 
         self.parent = parent
         self.children = []

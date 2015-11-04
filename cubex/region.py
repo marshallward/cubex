@@ -8,6 +8,9 @@ class Region(object):
         self.description = node.find('descr').text
         self.url = node.find('url').text
 
+        # Call tree node references
+        self.cnodes = []
+
         # Classification
         self.paradigm = node.find('paradigm').text
         self.role = node.find('role').text

@@ -121,7 +121,9 @@ class Cube(object):
 
         # TODO: Topologies
 
-    def read_data(self, metric):
+    def read_data(self, metric_name):
+
+        metric = self.metrics[metric_name]
 
         # Populate data
         # TODO: Get data size (bytes send/recv seems different)
