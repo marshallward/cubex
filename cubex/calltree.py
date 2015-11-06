@@ -15,7 +15,7 @@ class CallTree(object):
         self.children = []
 
         for child_node in node.findall('cnode'):
-            child_tree = CallTree(child_node, cube)
+            child_tree = CallTree(child_node, cube, self)
             self.children.append(child_tree)
 
     def update_index(self, index):
