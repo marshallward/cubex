@@ -24,8 +24,9 @@ class Cube(object):
         self.calltrees = []
         self.cindex = []
 
+        # TODO: move locationgroups inside of system
         self.systems = []
-        self.locations = []
+        self.locationgrps = []
 
     def parse(self, cubex_path):
 
@@ -35,7 +36,7 @@ class Cube(object):
         try:
             anchor_file = self.cubex_file.extractfile('anchor.xml')
         except KeyError:
-            # TODO: Exit gracefully
+            self.cubex_file.close()
             raise
 
         anchor = ElementTree.parse(anchor_file)
@@ -56,8 +57,6 @@ class Cube(object):
         # TODO: Other profilers (e.g. scalasca) store metrics as trees
         # TODO: This needs to be a function shared by other elements
         for mnode in root.find('metrics').findall('metric'):
-            # Old implementation
-            #self.metrics.append(Metric(mnode))
 
             metric = Metric(mnode)
             assert metric.name != metric.idx
@@ -80,15 +79,11 @@ class Cube(object):
 
         # Regions
         for rnode in root.find('program').findall('region'):
-            # Old implementation
-            #self.regions.append(Region(rnode))
 
             region = Region(rnode)
             assert region.name != region.idx
             assert region.idx not in self.regions
 
-            if region.name in self.regions:
-                print(region.name, region.idx, self.regions[region.name])
             if region.name in self.regions:
                 rlist = self.regions[region.name]
                 if not isinstance(rlist, list):
@@ -117,7 +112,7 @@ class Cube(object):
 
             for nnode in snode.findall('systemtreenode'):
                 for lnode in nnode.findall('locationgroup'):
-                    self.locations.append(LocationGroup(lnode))
+                    self.locationgrps.append(LocationGroup(lnode))
 
         # TODO: Topologies
 
@@ -142,10 +137,14 @@ class Cube(object):
         m_fmt = metric_fmt[metric.dtype]
 
         for cnode in self.cindex:
-            n_bytes = len(self.locations) * 8
+            n_locs = 0
+            for locgrp in self.locationgrps:
+                n_locs += len(locgrp.locations)
+
+            n_bytes = n_locs * 8
             raw = m_data.read(n_bytes)
 
-            fmt = '<' + m_fmt * len(self.locations)
+            fmt = '<' + m_fmt * n_locs
             cnode.metrics[metric.name] = struct.unpack(fmt, raw)
 
 
