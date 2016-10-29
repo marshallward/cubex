@@ -28,6 +28,9 @@ class Cube(object):
         self.systems = []
         self.locationgrps = []
 
+        # UI control
+        self.verbose = False
+
     def parse(self, cubex_path):
 
         # Open the .cubex tar file and preserve the reference
@@ -72,7 +75,8 @@ class Cube(object):
             try:
                 m_index = self.cubex_file.extractfile(index_fname)
             except KeyError:
-                print('{} not found; skipping.'.format(index_fname))
+                if self.verbose:
+                    print('{} not found; skipping.'.format(index_fname))
                 continue
 
             metric.read_index(m_index)
