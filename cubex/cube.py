@@ -21,6 +21,9 @@ class Cube(object):
         self.metrics = {}
         self.regions = {}
 
+        # Index lookup tables (TODO: phase this out)
+        self.rindex = {}
+
         self.calltrees = []
         self.cindex = []
 
@@ -28,22 +31,37 @@ class Cube(object):
         self.systems = []
         self.locationgrps = []
 
-        # UI control
+        # User configuration
         self.verbose = False
 
-    def parse(self, cubex_path):
+    def __enter__(self):
+        return self
 
-        # Open the .cubex tar file and preserve the reference
-        self.cubex_file = tarfile.open(cubex_path, 'r')
+    def __exit__(self, type, value, traceback):
+        self.close()
 
+    # Public API
+
+    def open(self, path):
+        self.cubex_file = tarfile.open(path, 'r')
+        self.read_manifest()
+
+    def close(self):
+        self.cubex_file.close()
+
+    # Support functions
+
+    def read_manifest(self):
+        # Open the CUBE manifest
         try:
             anchor_file = self.cubex_file.extractfile('anchor.xml')
         except KeyError:
-            self.cubex_file.close()
+            self.close()
             raise
 
         anchor = ElementTree.parse(anchor_file)
         root = anchor.getroot()
+        # TODO: Close anchor_file?
 
         assert root.tag == 'cube'
         self.version = root.attrib['version']
@@ -62,15 +80,17 @@ class Cube(object):
         for mnode in root.find('metrics').findall('metric'):
 
             metric = Metric(mnode)
-            assert metric.name != metric.idx
-            assert metric.name not in self.metrics
-            assert metric.idx not in self.metrics
-
             self.metrics[metric.name] = metric
-            self.metrics[metric.idx] = metric
 
-        # Read the metric index
+            # Naively mix names and indexes as keys?
+            #assert metric.name != metric.idx
+            #assert metric.name not in self.metrics
+            #assert metric.idx not in self.metrics
+            #self.metrics[metric.idx] = metric
+
+        # Read the metric index and get the data file
         for name, metric in self.metrics.items():
+
             index_fname = '{}.index'.format(metric.idx)
             try:
                 m_index = self.cubex_file.extractfile(index_fname)
@@ -81,12 +101,20 @@ class Cube(object):
 
             metric.read_index(m_index)
 
+            # Get the data file object (but do not read)
+            try:
+                m_data_fname = '{}.data'.format(metric.idx)
+                metric.datafile = self.cubex_file.extractfile(m_data_fname)
+            except KeyError:
+                # TODO: Fill missing entries with zeros
+                pass
+
         # Regions
         for rnode in root.find('program').findall('region'):
 
             region = Region(rnode)
-            assert region.name != region.idx
-            assert region.idx not in self.regions
+            #assert region.name != region.idx
+            #assert region.idx not in self.regions
 
             if region.name in self.regions:
                 rlist = self.regions[region.name]
@@ -97,7 +125,7 @@ class Cube(object):
             else:
                 self.regions[region.name] = region
 
-            self.regions[region.idx] = region
+            self.rindex[region.idx] = region
 
         # Call tree
         for cnode in root.find('program').findall('cnode'):
@@ -150,6 +178,12 @@ class Cube(object):
 
             fmt = '<' + m_fmt * n_locs
             cnode.metrics[metric.name] = struct.unpack(fmt, raw)
+
+    # User interface
+    def show_metrics(self):
+        for metric in self.metrics.keys():
+            print(metric)
+
 
 
 # Taken from CubeMetric.cpp

@@ -15,6 +15,9 @@ class Metric(object):
 
         self.index = None
 
+        # Data file
+        self.datafile = None
+
     def read_index(self, m_index):
         header = m_index.read(11)
         assert header == b'CUBEX.INDEX'
@@ -25,3 +28,7 @@ class Metric(object):
 
         raw_index = m_index.read(4 * n_nodes)
         self.index = struct.unpack('{}i'.format(n_nodes), raw_index)
+
+    def read(self):
+        header = datafile.read(10)
+        assert header == b'CUBEX.DATA'

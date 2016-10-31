@@ -2,8 +2,8 @@ __version__ = '0.0a'
 
 from cubex.cube import Cube
 
-def read(cube_path):
+def open(path):
     """Create a CUBE object."""
     cube = Cube()
-    cube.parse(cube_path)
+    cube.open(path)
     return cube

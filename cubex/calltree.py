@@ -6,10 +6,10 @@ class CallTree(object):
         self.metrics = {}
 
         region_id = int(node.get('calleeId'))
-        self.region = cube.regions[region_id]
+        self.region = cube.rindex[region_id]
 
         # Append the cnode to the corresponding region
-        cube.regions[region_id].cnodes.append(self)
+        cube.rindex[region_id].cnodes.append(self)
 
         self.parent = parent
         self.children = []
