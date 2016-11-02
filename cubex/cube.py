@@ -11,6 +11,8 @@ from cubex.system import SystemNode, Location, LocationGroup
 
 class Cube(object):
 
+    # Implementation
+
     def __init__(self):
         self.cubex_file = None
 
@@ -20,16 +22,13 @@ class Cube(object):
 
         self.metrics = {}
         self.regions = {}
+        self.calltrees = []
+        self.systems = []
+        self.locationgrps = []  # TODO: move locationgroups inside of system
 
         # Index lookup tables (TODO: phase this out)
         self.rindex = {}
-
-        self.calltrees = []
         self.cindex = []
-
-        # TODO: move locationgroups inside of system
-        self.systems = []
-        self.locationgrps = []
 
         # User configuration
         self.verbose = False
@@ -44,25 +43,19 @@ class Cube(object):
 
     def open(self, path):
         self.cubex_file = tarfile.open(path, 'r')
-        self.read_manifest()
+        self.read_anchor()
 
     def close(self):
         self.cubex_file.close()
 
     # Support functions
 
-    def read_manifest(self):
-        # Open the CUBE manifest
-        try:
-            anchor_file = self.cubex_file.extractfile('anchor.xml')
-        except KeyError:
-            self.close()
-            raise
+    def read_anchor(self):
+        # TODO: Missing anchor.xml?
+        with self.cubex_file.extractfile('anchor.xml') as anchor_file:
+            anchor = ElementTree.parse(anchor_file)
 
-        anchor = ElementTree.parse(anchor_file)
         root = anchor.getroot()
-        # TODO: Close anchor_file?
-
         assert root.tag == 'cube'
         self.version = root.attrib['version']
 
@@ -75,18 +68,10 @@ class Cube(object):
         # TODO
 
         # Metrics
-        # TODO: Other profilers (e.g. scalasca) store metrics as trees
-        # TODO: This needs to be a function shared by other elements
+        # TODO: Some profilers (e.g. scalasca) store metrics as trees
         for mnode in root.find('metrics').findall('metric'):
-
             metric = Metric(mnode)
             self.metrics[metric.name] = metric
-
-            # Naively mix names and indexes as keys?
-            #assert metric.name != metric.idx
-            #assert metric.name not in self.metrics
-            #assert metric.idx not in self.metrics
-            #self.metrics[metric.idx] = metric
 
         # Read the metric index and get the data file
         for name, metric in self.metrics.items():
@@ -113,8 +98,6 @@ class Cube(object):
         for rnode in root.find('program').findall('region'):
 
             region = Region(rnode)
-            #assert region.name != region.idx
-            #assert region.idx not in self.regions
 
             if region.name in self.regions:
                 rlist = self.regions[region.name]
