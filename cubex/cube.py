@@ -51,9 +51,11 @@ class Cube(object):
     # Support functions
 
     def read_anchor(self):
-        # TODO: Missing anchor.xml?
-        with self.cubex_file.extractfile('anchor.xml') as anchor_file:
-            anchor = ElementTree.parse(anchor_file)
+        # NOTE: Using a `with` construct here will fail on Python 2, since
+        # tarfile's ExtObject doesn't support __exit__()
+        anchor_file = self.cubex_file.extractfile('anchor.xml')
+        anchor = ElementTree.parse(anchor_file)
+        anchor_file.close()
 
         root = anchor.getroot()
         assert root.tag == 'cube'
