@@ -101,8 +101,9 @@ Notes
   function name.  For example,  a function named ``GET_LAPLACIAN`` will be
   stored as ``get_laplacian_``.
 
-  This is the usual convention, but other compilers may deviate from thisj
-  so it's recommended that you inspect the regions before accessing them.
+  This is the usual convention, but other compilers may deviate from this, so
+  it's best to inspect the regions with ``print_tree()`` or some other method
+  first.
 
 * Currently only Score-P output is supported in the ``main`` branch.  Scalasca
   output is slightly different and currently does not work as well in
