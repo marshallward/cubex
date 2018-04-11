@@ -28,7 +28,8 @@ class Cube(object):
 
         # Index lookup tables (TODO: phase this out)
         self.rindex = {}
-        self.cindex = []
+        self.cindex = {}
+        self.exclusive_index = []
 
         # User configuration
         self.verbose = False
@@ -88,12 +89,12 @@ class Cube(object):
 
             metric.read_index(m_index)
 
-            # Get the data file object (but do not read)
+            # Create the data file object (but do not read)
             try:
                 m_data_fname = '{}.data'.format(metric.idx)
                 metric.datafile = self.cubex_file.extractfile(m_data_fname)
             except KeyError:
-                # TODO: Fill missing entries with zeros
+                # TODO: Fill missing entries with zeros?
                 pass
 
         # Regions
@@ -117,9 +118,11 @@ class Cube(object):
             self.calltrees.append(CallTree(cnode, self))
 
         # Construct the call tree index
+        # TODO: Phase out cindex?
         for ctree in self.calltrees:
-            self.cindex.append(ctree)
+            self.cindex[ctree.idx] = ctree
             ctree.update_index(self.cindex)
+        print(self.calltrees)
 
         # Location groups
         # TODO: Connect nodes to processes
@@ -141,10 +144,9 @@ class Cube(object):
         # TODO: Get data size (bytes send/recv seems different)
         try:
             m_data_fname = '{}.data'.format(metric.idx)
-            print(m_data_fname)
             m_data = self.cubex_file.extractfile(m_data_fname)
         except KeyError:
-            # TODO: Fill missing entries with zeros
+            # TODO: Fill missing entries with zeros?
             pass
 
         # Skip header
@@ -153,10 +155,16 @@ class Cube(object):
 
         m_fmt = metric_fmt[metric.dtype]
 
-        for cnode in self.cindex:
-            n_locs = 0
-            for locgrp in self.locationgrps:
-                n_locs += len(locgrp.locations)
+        # TODO: Store this somewhere?  Or create a property.
+        n_locs = 0
+        for locgrp in self.locationgrps:
+            n_locs += len(locgrp.locations)
+
+        for idx in metric.index:
+            if metric.mtype == 'EXCLUSIVE':
+                idx = self.exclusive_index[idx]
+
+            cnode = self.cindex[idx]
 
             n_bytes = n_locs * 8
             raw = m_data.read(n_bytes)
@@ -168,7 +176,6 @@ class Cube(object):
     def show_metrics(self):
         for metric in self.metrics.keys():
             print(metric)
-
 
 
 # Taken from CubeMetric.cpp
