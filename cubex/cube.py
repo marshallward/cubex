@@ -29,6 +29,7 @@ class Cube(object):
         # Index lookup tables (TODO: phase this out)
         self.rindex = {}
         self.cindex = {}
+        self.inclusive_index = []
         self.exclusive_index = []
 
         # User configuration
@@ -120,9 +121,9 @@ class Cube(object):
         # Construct the call tree index
         # TODO: Phase out cindex?
         for ctree in self.calltrees:
+            self.inclusive_index.append(ctree.idx)
             self.cindex[ctree.idx] = ctree
             ctree.update_index(self.cindex)
-        print(self.calltrees)
 
         # Location groups
         # TODO: Connect nodes to processes
@@ -161,8 +162,11 @@ class Cube(object):
             n_locs += len(locgrp.locations)
 
         for idx in metric.index:
+            # TODO: Hash with metric.mtype
             if metric.mtype == 'EXCLUSIVE':
                 idx = self.exclusive_index[idx]
+            elif metric.mtype == 'INCLUSIVE':
+                idx = self.inclusive_index[idx]
 
             cnode = self.cindex[idx]
 

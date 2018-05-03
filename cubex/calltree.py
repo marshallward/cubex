@@ -9,15 +9,15 @@ class CallTree(object):
         self.region = cube.rindex[region_id]
 
         # Append the cnode to the corresponding region
+        self.cube = cube
         cube.rindex[region_id].cnodes.append(self)
 
         self.parent = parent
         self.children = []
 
-        # Construct the inclusive-to-exclusive index map
-        # NOTE: EXCLUSIVE is neither breadth-first nor depth-first.  It is some
-        #       sort of fanning over children, then recursing through each
-        #       child.  Appending here during __init__ reproduces this pattern.
+        # Construct the inclusive and exclusive index maps
+        # These may be breadth-first and depth-first, respectively, but my
+        # memory is that they are similar, but not identical, to them.
         cube.exclusive_index.append(self.idx)
 
         for child_node in node.findall('cnode'):
@@ -25,7 +25,8 @@ class CallTree(object):
             self.children.append(child_tree)
 
     def update_index(self, index):
-        #index.extend(self.children)
+        self.cube.inclusive_index.extend([c.idx for c in self.children])
+
         index[self.idx] = self
         for child in self.children:
             child.update_index(index)
