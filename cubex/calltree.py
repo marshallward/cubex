@@ -24,6 +24,10 @@ class CallTree(object):
             child_tree = CallTree(child_node, cube, self)
             self.children.append(child_tree)
 
+    def __getitem__(self, index):
+        # TODO: Assert integer
+        return self.children[index]
+
     def update_index(self, index):
         self.cube.inclusive_index.extend([c.idx for c in self.children])
 
@@ -50,14 +54,18 @@ class CallTree(object):
         self_sum = sum(self.metrics[metric_name][sloc:eloc])
 
         weights = {}
+        reg_idx = {}
         children_sum = 0.
-        for child in self.children:
+        for idx, child in enumerate(self.children):
             child_sum = sum(child.metrics[metric_name][sloc:eloc])
             children_sum += child_sum
 
             weights[child.region.name] = child_sum / self_sum
+            reg_idx[child.region.name] = idx
 
         weights[self.region.name] = (self_sum - children_sum) / self_sum
+        reg_idx[self.region.name] = '-'
 
         for region in sorted(weights, key=weights.get, reverse=True):
-            print('{:.3f}: {}'.format(weights[region], region))
+            print('{:.3f}: [{}] {}'
+                  ''.format(weights[region], reg_idx[region], region))
