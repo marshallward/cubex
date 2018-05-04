@@ -31,7 +31,12 @@ class CallTree(object):
         for child in self.children:
             child.update_index(index)
 
-    def print_tree(self, indent=''):
+    def print_tree(self, indent='', depth=None):
         print(indent + '- ' + self.region.name)
-        for child in self.children:
-            child.print_tree(indent + '  ')
+
+        if depth is not None:
+            depth = depth - 1
+
+        if depth is None or depth > 0:
+            for child in self.children:
+                child.print_tree(indent + '  ', depth=depth)
