@@ -40,3 +40,24 @@ class CallTree(object):
         if depth is None or depth > 0:
             for child in self.children:
                 child.print_tree(indent + '  ', depth=depth)
+
+    def print_weights(self, metric_name, interval=None):
+        # TODO: Check that metric is inclusive
+        # TODO: Check arguments
+
+        sloc, eloc = interval if interval else (0, -1)
+
+        self_sum = sum(self.metrics[metric_name][sloc:eloc])
+
+        weights = {}
+        children_sum = 0.
+        for child in self.children:
+            child_sum = sum(child.metrics[metric_name][sloc:eloc])
+            children_sum += child_sum
+
+            weights[child.region.name] = child_sum / self_sum
+
+        weights[self.region.name] = (self_sum - children_sum) / self_sum
+
+        for region in sorted(weights, key=weights.get, reverse=True):
+            print('{:.3f}: {}'.format(weights[region], region))
