@@ -181,6 +181,11 @@ class Cube(object):
         for metric in self.metrics.keys():
             print(metric)
 
+    # Top-level call tree
+    def print_tree(self, indent='', depth=None):
+        for tree in self.calltrees:
+            tree.print_tree(indent, depth)
+
 
 # Taken from CubeMetric.cpp
 metric_fmt = {

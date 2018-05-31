@@ -45,52 +45,60 @@ profile's calltree.
 
 .. code:: python
 
-   >> prof.calltrees[0].print_tree()
+   >> prof.print_tree()
 
 This displays each node of the call tree, indented by depth, and labeled with
-its corresponding region.
-
-At this point, it helps if the user has some intuitive feel for the call tree
-in the profile.  (And if anyone has feedback on how to improve this, please
-submit feedback.)
-
-Having said that, if one knows the function (or "region" in CUBE parlance) of
-interest, then the data is accessed with the ``region`` property.
+its corresponding region.  To limit the tree depth, use the ``depth``
+argument.
 
 .. code:: python
 
-   >> prof.regions[reg].cnodes
-   [<cubex.calltree.CallTree object at 0x7f4437892f90>,
-    <cubex.calltree.CallTree object at 0x7f4437539f10>,
-    ...
-   ]
+   >> prof.print_tree(depth=2)
 
-This returns a list of each node (actually subtree) in the call tree where this
-function was called.
-
-To distinguish between ``cnodes``, one can inspect its call tree (using
-``print_tree()``) or inspect its parent node.
+To check the metric values for a particular calltree node, use the ``metrics``
+function.
 
 .. code:: python
 
-   >> cnode = prof.regions[reg].cnodes[0]
-   >> cnode.parent.region.name
-   'function_name_calling_cnode_'
+   >> tree = prof.calltrees[0]
+   >> tree.metrics('time')
+   (0.0, 2217.959667782429, 2217.9596701080204, 2217.959673855075, ... )
 
-One can also inspect the node index (``cnode.idx``) although this requires some
-knowledge of the tree itself, which can be checked using the CUBE graphical
-browser.
+In the example above, ``metrics`` returns a tuple of times in each
+computational unit, such as an MPI rank or OpenMP thread.
 
-Finally, to get the metric values at the target ``cnode``, access its
-``metrics`` property.
+For a quick inspection of the contents, start with the ``print_weights``
+function on one of the call trees.  (In most cases, there will only be one
+calltree.)
 
 .. code:: python
 
-   >> prof.regions[reg].cnodes[0].metrics['time']
-   (496.59532077590507, 291.106782542039, 496.5975198073004, ...)
+   >> tree = prof.calltrees[0]
+   >> tree.print_weights('time')
+   0.877: [6] cpl_interfaces.into_cpl_
+   0.068: [7] cpl_interfaces.coupler_termination_
+   0.042: [2] cpl_interfaces.init_cpl_
+   ...
 
-This returns a list of the time measured in each computational unit, such as an
-MPI rank or OpenMP thread.
+The first column indicates the relative proportion of the metric total (in this
+case, relative time) in the denoted region.  The second column indicates the
+index of the child node for ``tree``.
+
+(The particular format of this function is a work in progress, and any feedback
+is welcome.)
+
+To further inspect a region, say ``cpl_interfaces.into_cpl_``, repeat this
+function over index 6.
+
+.. code:: python
+
+   >> tree[6].print_weights('time')
+   0.979: [1] mod_oasis_getput_interface.oasis_put_r28_
+   0.011: [2] MPI_Recv
+   0.009: [0] remap_runoff_mod.remap_runoff_do_
+   0.000: [-] cpl_interfaces.into_cpl_
+
+The dash (``-``) indicates time spent inside the function.
 
 
 Notes
