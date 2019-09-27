@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ElementTree
 from cubex.metric import Metric
 from cubex.region import Region
 from cubex.calltree import CallTree
-from cubex.system import SystemNode, Location, LocationGroup
+from cubex.system import System
 
 
 class Cube(object):
@@ -54,7 +54,7 @@ class Cube(object):
 
     def read_anchor(self):
         # NOTE: Using a `with` construct here will fail on Python 2, since
-        # tarfile's ExtObject doesn't support __exit__()
+        #       tarfile's ExtObject doesn't support __exit__()
         anchor_file = self.cubex_file.extractfile('anchor.xml')
         anchor = ElementTree.parse(anchor_file)
         anchor_file.close()
@@ -79,8 +79,8 @@ class Cube(object):
 
         # Read the metric index and get the data file
         for name, metric in self.metrics.items():
-
             index_fname = '{}.index'.format(metric.idx)
+
             try:
                 m_index = self.cubex_file.extractfile(index_fname)
             except KeyError:
@@ -100,7 +100,6 @@ class Cube(object):
 
         # Regions
         for rnode in root.find('program').findall('region'):
-
             region = Region(rnode)
 
             if region.name in self.regions:
@@ -126,19 +125,13 @@ class Cube(object):
             ctree.update_index(self.cindex)
 
         # Location groups
-        # TODO: Connect nodes to processes
-        #       This is just a dump of the info
-        for snode in root.find('system').findall('systemtreenode'):
-            self.systems.append(SystemNode(snode))
+        self.system = System(root.find('system'), self)
 
-            for nnode in snode.findall('systemtreenode'):
-                for lnode in nnode.findall('locationgroup'):
-                    self.locationgrps.append(LocationGroup(lnode))
+        # TODO: Need to populate locationgroups similar to calltree
 
         # TODO: Topologies
 
     def read_data(self, metric_name):
-
         metric = self.metrics[metric_name]
 
         # Populate data
