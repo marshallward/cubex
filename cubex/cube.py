@@ -24,7 +24,6 @@ class Cube(object):
         self.regions = {}
         self.calltrees = []
         self.systems = []
-        self.locationgrps = []  # TODO: move locationgroups inside of system
 
         # Index lookup tables (TODO: phase this out)
         self.rindex = {}
@@ -125,7 +124,7 @@ class Cube(object):
             ctree.update_index(self.cindex)
 
         # Location groups
-        self.system = System(root.find('system'), self)
+        self.system = System(root.find('system'))
 
         # TODO: Need to populate locationgroups similar to calltree
 
@@ -151,7 +150,7 @@ class Cube(object):
 
         # TODO: Store this somewhere?  Or create a property.
         n_locs = 0
-        for locgrp in self.locationgrps:
+        for locgrp in self.system.locationgroups:
             n_locs += len(locgrp.locations)
 
         for idx in metric.index:

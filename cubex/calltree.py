@@ -49,7 +49,7 @@ class CallTree(object):
         # TODO: Check that metric is inclusive
         # TODO: Check arguments
 
-        sloc, eloc = interval if interval else (0, -1)
+        sloc, eloc = interval if interval else (None, None)
 
         self_sum = sum(self.metrics[metric_name][sloc:eloc])
 
